@@ -41,6 +41,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <getopt.h>
 
+#include <Availability.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/IOKitLib.h>
 #include <IOKit/IOCFPlugIn.h>
@@ -211,8 +212,12 @@ CFMutableDictionaryRef _getMatchingDictionary(UInt16 version)
 
 io_service_t _getIOService(CFMutableDictionaryRef matchingDict)
 {
-	if(!matchingDict) return (io_service_t)NULL;
+	if(!matchingDict) return (io_service_t)0;
+#if defined(__MAC_12_0) && __MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_12_0
+	return IOServiceGetMatchingService(kIOMainPortDefault, matchingDict);
+#else
 	return IOServiceGetMatchingService(kIOMasterPortDefault, matchingDict);
+#endif
 }
 
 IOHIDDeviceInterface** _getHIDInterface(io_service_t service)
@@ -304,7 +309,7 @@ int main(int argc, char **argv)
 {
 	rsSettings settings = { -1, -1, -1, -1, 0, 0 };
 	CFMutableDictionaryRef matchingDict = NULL;
-	io_service_t service = (io_service_t)NULL;
+	io_service_t service = (io_service_t)0;
 	IOHIDDeviceInterface** hidInterface = NULL;
 	kern_return_t result;
 	
